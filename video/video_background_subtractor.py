@@ -49,3 +49,20 @@ class VideoBackgroundSubtractorMOG2(VideoBackgroundSubtractor):
         """Преобразование кадра с использованием MOG2 и удаление шума в кадре"""
 
         return self._get_mask_frame(mask=self.__mog_2)
+
+
+class VideoBackgroundSubtractorKNN(VideoBackgroundSubtractor):
+    """Алгоритм сегментации фона/переднего плана основанный на K-ближайшей соседней"""
+
+    def __init__(self, path_rtsp: Union[int, str]):
+        """Инициализация параметров"""
+
+        # Наследование параметров от базового класса
+        super().__init__(path_rtsp)
+        # Создание сегментации фона на основе K-ближайшей соседней
+        self.__knn = cv2.createBackgroundSubtractorKNN(detectShadows=False)
+
+    def _get_frame(self) -> cv2.UMat:
+        """Преобразование кадра с использованием KNN и удаление шума в кадре"""
+
+        return self._get_mask_frame(mask=self.__knn)
