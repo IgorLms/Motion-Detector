@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from video.grey_video import GrayVideoCaptureRTSP
+from grey_video import GrayVideoCaptureRTSP
 
 
 class SubtractionFrame(GrayVideoCaptureRTSP):
