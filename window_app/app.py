@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QCloseEvent
 from PyQt5 import QtGui
 
 import numpy as np
@@ -31,6 +31,13 @@ class App(ApplicationDesign):
         self.open_filter_video.clicked.connect(self.__run_open_filter_video)
         self.open_video_full.clicked.connect(self.__full_screen_video)
         self.add_camera.clicked.connect(self._add_camera_json)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Метод закрытия окна"""
+        # Остановить просмотр видео
+        self.__stop_video()
+        # Закрыть приложение
+        event.accept()
 
     @staticmethod
     def _get_json() -> json:
