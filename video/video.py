@@ -1,5 +1,7 @@
 from typing import Union
 
+import subprocess
+import re
 import cv2
 
 
@@ -11,6 +13,8 @@ class VideoCaptureRTSP:
 
         # Сохранение пути до камеры
         self.__path_rtsp = path_rtsp
+        # Валидация пинга IP адреса
+        self.__validate_ping_ip_address()
         # Валидация пути видео
         self.__validate_path_rtsp()
         # Определение устройства воспроизведения видео
@@ -71,3 +75,15 @@ class VideoCaptureRTSP:
 
         if not ret:
             raise ValueError('Ошибка кадра!')
+
+    def __validate_ping_ip_address(self) -> None:
+        """Проверка, ip адрес из rtsp ссылки пингуется"""
+
+        if isinstance(self.__path_rtsp, str):
+            # Поиск ip в RTSP ссылке
+            ip = re.findall("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", self.__path_rtsp)
+
+            # Если найден хоть один ip адрес в RTSP, то пингануть его
+            if len(ip) > 0:
+                if subprocess.run(f'ping -n 1 -w 1 {ip[0]}', shell=True, stdout=subprocess.DEVNULL).returncode:
+                    raise ConnectionError(f'{ip[0]} не доступен.')
