@@ -1,6 +1,6 @@
 import cv2
 
-from video import VideoCaptureRTSP
+from video.video import VideoCaptureRTSP
 
 
 class GrayVideoCaptureRTSP(VideoCaptureRTSP):
