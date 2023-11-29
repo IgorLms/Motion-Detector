@@ -26,6 +26,12 @@ class App(ApplicationDesign):
         # Инициализация класса для получения видео, по умолчанию False
         self.__thread = False
 
+        # Привязка функций к кнопкам
+        self.open_video.clicked.connect(self.__run_open_video)
+        self.open_filter_video.clicked.connect(self.__run_open_filter_video)
+        self.open_video_full.clicked.connect(self.__full_screen_video)
+        self.add_camera.clicked.connect(self._add_camera_json)
+
     @staticmethod
     def _get_json() -> json:
         """Чтение JSON файла"""
