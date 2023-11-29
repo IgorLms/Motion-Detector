@@ -152,3 +152,37 @@ class App(ApplicationDesign):
 
         # Запускаем видео
         self.__run_open_video()
+
+    def __full_screen_video(self) -> None:
+        """Видео на полный экран"""
+
+        if self.isFullScreen():
+            # Видео вернуть в прежнее состояние
+            self.showNormal()
+            # Показать макет для добавления и открытия видео
+            self.add_camera_title.show()
+            self.name_camera_title.show()
+            self.name_camera.show()
+            self.rtsp_title.show()
+            self.rtsp.show()
+            self.add_camera.show()
+            self.add_camera_line.show()
+            self.open_camera_title.show()
+            for button in self.list_button:
+                button.show()
+            self.vertical_line_main.show()
+        else:
+            # Видео на полный экран
+            self.showFullScreen()
+            # Скрыть макет для добавления и открытия видео
+            self.add_camera_title.hide()
+            self.name_camera_title.hide()
+            self.name_camera.hide()
+            self.rtsp_title.hide()
+            self.rtsp.hide()
+            self.add_camera.hide()
+            self.add_camera_line.hide()
+            self.open_camera_title.hide()
+            for button in self.list_button:
+                button.hide()
+            self.vertical_line_main.hide()
