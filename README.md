@@ -9,17 +9,16 @@
 - Просмотр чёрно белого видео ([GrayVideoCaptureRTSP](video/grey_video.py));
 - Просмотр видео с использованием вычитания двух чёрно белых кадров видео ([SubtractionFrame](video/motion_detector.py));
 - Просмотр видео с сегментацией на основе модели Гаусса ([VideoBackgroundSubtractorMOG2](video/video_background_subtractor.py));
-- Просмотр видео с сегментацией на основе K-ближайших соседей ([VideoBackgroundSubtractorKNN](video/video_background_subtractor.py));
-- Просмотр видео с использованием детектора движения ([MotionDetector](video/motion_detector.py)).
+- Просмотр видео с сегментацией на основе K-ближайших соседей ([VideoBackgroundSubtractorKNN](video/video_background_subtractor.py)).
 
 **Пример**
 
 ```python
 import cv2
-from motion_detector import MotionDetector
+from motion_detector import SubtractionFrame
 
 # Просмотр видео с использованием детектора движения
-video = MotionDetector(0)
+video = SubtractionFrame(0)
 
 while True:
     # Просмотр видео

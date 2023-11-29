@@ -1,7 +1,7 @@
 import cv2
 
 from grey_video import GrayVideoCaptureRTSP
-from motion_detector import MotionDetector, SubtractionFrame
+from motion_detector import SubtractionFrame
 from video import VideoCaptureRTSP
 from video_background_subtractor import VideoBackgroundSubtractorMOG2, VideoBackgroundSubtractorKNN
 
@@ -19,9 +19,6 @@ video = VideoCaptureRTSP(0)
 
 # Просмотр видео с сегментацией на основе K-ближайших соседей
 # video = VideoBackgroundSubtractorKNN(0)
-
-# Просмотр видео с использованием детектора движения
-# video = MotionDetector(0)
 
 while True:
     video.get_show()
