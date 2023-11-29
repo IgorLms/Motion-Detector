@@ -6,7 +6,14 @@ from video import VideoCaptureRTSP
 class GrayVideoCaptureRTSP(VideoCaptureRTSP):
     """Класс для получения чёрно белого изображения"""
 
-    def _get_frame(self) -> cv2.UMat:
+    def _get_frame(self) -> [bool, cv2.UMat]:
         """Преобразовать кадр в черно-белый цвет"""
 
-        return cv2.cvtColor(super()._get_frame(), cv2.COLOR_BGR2GRAY)
+        # Получение кадра с видео
+        ret, frame = super()._get_frame()
+
+        if ret:
+            # Если кадр корректный, то преобразовать его в чёрно-белый цвет
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        return ret, frame

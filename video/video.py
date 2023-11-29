@@ -32,27 +32,28 @@ class VideoCaptureRTSP:
             # Уничтожить все открытые окна
             cv2.destroyAllWindows()
 
-    def _get_frame(self) -> cv2.typing.MatLike:
+    def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
 
-        # Проверка, что видео открывается
-        self.__validate_open_video_source()
         # Получить кадр из видео в виде логической переменной и массива
         ret, frame = self.__cap.read()
-        # Проверить, что кадр существует
-        self.__validate_ret(ret)
 
-        return frame
+        return ret, frame
 
-    def get_show(self, frame: cv2.UMat = None, name: str = 'Video') -> None:
+    def get_show(self, ret: bool = True, frame: cv2.UMat = None, name: str = 'Video') -> None:
         """Вывод кадра с видеопотока"""
 
         if frame is None:
-            frame = self._get_frame()
+            ret, frame = self._get_frame()
 
+        # Проверить, что кадр существует
+        self.__validate_ret(ret)
+        
+        # Установка размера просмотра видео на полный экран
         cv2.namedWindow(name, cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+        # Запустить просмотр видео
         cv2.imshow(name, frame)
 
     def __validate_path_rtsp(self) -> None:
