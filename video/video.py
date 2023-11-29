@@ -1,15 +1,28 @@
 from typing import Union
+from PyQt5.QtCore import QThread, pyqtSignal
 
+import numpy as np
 import subprocess
 import re
 import cv2
 
 
-class VideoCaptureRTSP:
+class VideoCaptureRTSP(QThread):
     """Просмотр камеры по RTSP потоку"""
+
+    # Сигнал передачи видео
+    change_pixmap_signal = pyqtSignal(np.ndarray)
+    # Сигнал остановки видео
+    signal_stop_video = pyqtSignal()
 
     def __init__(self, path_rtsp: Union[int, str]):
         """Инициализация параметров"""
+
+        # Наследование параметров от класса QThread
+        super().__init__()
+
+        # Флаг для управления потоком видео
+        self.__run_flag = False
 
         # Сохранение пути до камеры
         self.__path_rtsp = path_rtsp
@@ -19,6 +32,8 @@ class VideoCaptureRTSP:
         self.__validate_path_rtsp()
         # Определение устройства воспроизведения видео
         self.__cap = cv2.VideoCapture(path_rtsp)
+        # Проверка, что видео открывается
+        self.__validate_open_video_source()
 
     def __del__(self):
         """Завершение работы с классом"""
@@ -31,6 +46,37 @@ class VideoCaptureRTSP:
         finally:
             # Уничтожить все открытые окна
             cv2.destroyAllWindows()
+
+    def run(self):
+        """Получение изображения """
+
+        # Если run_flag False, то сделать True
+        if not self.__run_flag:
+            self.__run_flag = True
+
+        # Запуск цикла получения кадров видео
+        while self.__run_flag:
+            # Получение кадра видео
+            ret, frame = self._get_frame()
+
+            if ret:
+                # Отправка сигнала о существовании корректного кадра
+                self.change_pixmap_signal.emit(frame)
+            else:
+                # Если кадр некорректный, то остановить цикл и отправить сигнал об остановке просмотра
+                self.stop()
+                self.signal_stop_video.emit()
+
+        # Прекратить обращение к видео
+        self.__cap.release()
+
+    def stop(self):
+        """Метод завершения потока получения изображения"""
+
+        # Изменение переменной для остановки цикла
+        self.__run_flag = False
+        # Блокировка потока
+        self.wait()
 
     def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
