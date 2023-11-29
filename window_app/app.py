@@ -115,10 +115,14 @@ class App(ApplicationDesign):
     def __run_open_video(self) -> None:
         """Запуск видео основного потока"""
 
-        if self.__path or type(self.__path) == int and self.__path == 0:
-            self.__run_video(VideoCaptureRTSP(self.__path))
-        else:
-            self._create_error('Укажите камеру')
+        try:
+            if self.__path or type(self.__path) == int and self.__path == 0:
+                self.__run_video(VideoCaptureRTSP(self.__path))
+            else:
+                self._create_error('Укажите камеру')
+        except Exception as e:
+            # Обработка ошибок при инициализации видеопотока
+            self._create_error(str(e))
 
     def __run_open_filter_video(self) -> None:
         """Запуск видео с фильтром"""
