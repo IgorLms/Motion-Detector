@@ -7,9 +7,7 @@
 
 - Обычный просмотр видео ([VideoCaptureRTSP](video/video.py));
 - Просмотр чёрно белого видео ([GrayVideoCaptureRTSP](video/grey_video.py));
-- Просмотр видео с использованием вычитания двух чёрно белых кадров видео ([SubtractionFrame](video/motion_detector.py));
-- Просмотр видео с сегментацией на основе модели Гаусса ([VideoBackgroundSubtractorMOG2](video/video_background_subtractor.py));
-- Просмотр видео с сегментацией на основе K-ближайших соседей ([VideoBackgroundSubtractorKNN](video/video_background_subtractor.py)).
+- Просмотр видео с использованием вычитания двух чёрно белых кадров видео ([SubtractionFrame](video/motion_detector.py)).
 
 **Пример**
 
