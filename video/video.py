@@ -1,5 +1,6 @@
 from typing import Union
 from PyQt5.QtCore import QThread, pyqtSignal
+from cv2 import UMat
 
 import numpy as np
 import subprocess
@@ -42,7 +43,7 @@ class VideoCaptureRTSP(QThread):
             # Прекратить обращение к видео, если оно существовало
             self.__cap.release()
         except AttributeError:
-            pass
+            print('Видео не существовало.')
         finally:
             # Уничтожить все открытые окна
             cv2.destroyAllWindows()
@@ -86,7 +87,7 @@ class VideoCaptureRTSP(QThread):
 
         return ret, frame
 
-    def get_show(self, ret: bool = True, frame: cv2.UMat = None, name: str = 'Video') -> None:
+    def get_show(self, ret: bool = True, frame: UMat = None, name: str = 'Video') -> None:
         """Вывод кадра с видеопотока"""
 
         if frame is None:
@@ -102,13 +103,81 @@ class VideoCaptureRTSP(QThread):
         # Запустить просмотр видео
         cv2.imshow(name, frame)
 
+    @staticmethod
+    def _subtract(frame_old: UMat, frame_new: UMat) -> UMat:
+        """Нахождение разницы двух кадров"""
+
+        return np.uint8(np.abs(np.int32(frame_old) - np.int32(frame_new)))
+
+    @staticmethod
+    def _blur_object(frame: UMat, ksize: int = 5) -> UMat:
+        """Размытие контуров объекта"""
+
+        return cv2.GaussianBlur(frame, (ksize, ksize), 0)
+
+    @staticmethod
+    def _highlighting_white_object(frame: UMat, thresh: float = 20) -> UMat:
+        """Выделение кромки объекта белым цветом"""
+
+        _, threshold = cv2.threshold(frame, thresh, 255, cv2.THRESH_BINARY)
+        return threshold
+
+    @staticmethod
+    def _morphed(frame: UMat, mode: str, ksize: int = 5, iterations: int = 1) -> UMat:
+        """Морфологические фильтры"""
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize, ksize))
+
+        if mode == 'open':
+            # Удаление шума
+            morphed = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
+        elif mode == 'close':
+            # Закрытие внутренних пикселей
+            morphed = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, kernel)
+        elif mode == 'erode':
+            # Размытие контуров объекта
+            morphed = cv2.erode(frame, kernel, iterations)
+        elif mode == 'dilate':
+            # Расширение контуров объекта
+            morphed = cv2.dilate(frame, kernel, iterations)
+        else:
+            # Отправить обратно кадр
+            morphed = frame
+
+        return morphed
+
+    @staticmethod
+    def _sharpness(frame):
+        """Контурная резкость"""
+
+        kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+        frame = cv2.filter2D(frame, -1, kernel)
+
+        return frame
+
+    @staticmethod
+    def _find_contours(frame: UMat, size: int = 200) -> tuple:
+        """Создание кортежа контуров (маленьких и больших)."""
+
+        min_area_contour = []
+        max_area_counter = []
+
+        contours, _ = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area < size:
+                min_area_contour.append(contour)
+            else:
+                max_area_counter.append(contour)
+
+        return min_area_contour, max_area_counter
+
     def __validate_path_rtsp(self) -> None:
         """Проверка, что ссылка на видео число 0 или строка"""
 
         if not isinstance(self.__path_rtsp, (str, int)):
-            raise ValueError('Ссылка на камеру должна быть rtsp строкой или числом 0 (веб-камера)!')
-        elif isinstance(self.__path_rtsp, int) and self.__path_rtsp != 0:
-            raise ValueError('Для доступа к веб-камере передайте число 0!')
+            raise ValueError('Ссылка на камеру должна быть rtsp строкой или числом!')
 
     def __validate_open_video_source(self) -> None:
         """Проверка, что видео открывается"""

@@ -7,7 +7,7 @@ import json
 import cv2
 
 from window_app.designer import ApplicationDesign
-from video.motion_detector import SubtractionFrame
+from video.motion_detector import VideoBackgroundSubtractorKNN
 from video.video import VideoCaptureRTSP
 
 
@@ -128,7 +128,7 @@ class App(ApplicationDesign):
         """Запуск видео с фильтром"""
 
         if self.__path or type(self.__path) == int and self.__path == 0:
-            self.__run_video(SubtractionFrame(self.__path))
+            self.__run_video(VideoBackgroundSubtractorKNN(self.__path))
         else:
             self._create_error('Укажите камеру')
 
