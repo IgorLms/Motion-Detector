@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, Qt, QThread
 from PyQt5.QtGui import QPixmap, QCloseEvent
 from PyQt5 import QtGui
 
@@ -20,11 +20,13 @@ class App(ApplicationDesign):
         # Наследование параметров от класса ApplicationDesign
         super().__init__()
 
-        # Инициализация пути RTSP, по умолчанию False
-        self.__path = False
+        # Инициализация пути RTSP, по умолчанию 0
+        self.__path = 0
 
-        # Инициализация класса для получения видео, по умолчанию False
-        self.__thread = False
+        # Инициализация класса для получения видео
+        self.__thread = QThread(self)
+        self.video = VideoCaptureRTSP(self.__path)
+        self.filter_video = VideoBackgroundSubtractorKNN(self.__path)
 
         # Привязка функций к кнопкам
         self.open_video.clicked.connect(self.__run_open_video)
@@ -83,14 +85,14 @@ class App(ApplicationDesign):
         """Остановить видео просмотр"""
 
         # Остановить просмотр видео, если он существует
-        if self.__thread:
-            self.__thread.stop()
-        # Удалить последний кадр с виджета image_label
-        self.image_label.clear()
+        if self.__thread.isRunning():
+            self.__thread.set_status(False)
 
     def __start_video(self) -> None:
         """Начать видео просмотр"""
 
+        # Указать положительный флаг для запуска видео
+        self.__thread.set_status(True)
         # Подключение к сигналу просмотра видео
         self.__thread.change_pixmap_signal.connect(self.__update_image)
         # запустить просмотр видео
@@ -99,38 +101,22 @@ class App(ApplicationDesign):
     def __run_video(self, class_video):
         """Запуск видео"""
 
-        # Если путь для запуска видео существует
-        if self.__path or type(self.__path) == int and self.__path == 0:
-            self.__stop_video()
-            # Класс для получения видео
-            try:
-                # То запустить просмотр видео
-                self.__thread = class_video
-                self.__start_video()
-            except Exception as e:
-                # вывести ошибку, если при запуске видео возникли ошибки
-                self._create_error(str(e))
-                self.__stop_video()
+        # Остановить видео просмотр
+        self.__stop_video()
+        # Изменить класс для просмотра видео
+        self.__thread = class_video
+        # Начать видео просмотр
+        self.__start_video()
 
     def __run_open_video(self) -> None:
         """Запуск видео основного потока"""
 
-        try:
-            if self.__path or type(self.__path) == int and self.__path == 0:
-                self.__run_video(VideoCaptureRTSP(self.__path))
-            else:
-                self._create_error('Укажите камеру')
-        except Exception as e:
-            # Обработка ошибок при инициализации видеопотока
-            self._create_error(str(e))
+        self.__run_video(self.video)
 
     def __run_open_filter_video(self) -> None:
         """Запуск видео с фильтром"""
 
-        if self.__path or type(self.__path) == int and self.__path == 0:
-            self.__run_video(VideoBackgroundSubtractorKNN(self.__path))
-        else:
-            self._create_error('Укажите камеру')
+        self.__run_video(self.filter_video)
 
     @pyqtSlot(np.ndarray)
     def __update_image(self, frame: QPixmap) -> None:
