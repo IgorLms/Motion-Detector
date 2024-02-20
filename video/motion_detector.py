@@ -76,10 +76,10 @@ class VideoBackgroundSubtractorKNN(VideoCaptureRTSP):
             x, y, w, h = cv2.boundingRect(contour)
             frame[y:y + h, x:x + w] = 255
 
-        # Закрашивание многоугольников белым цветом
-        cv2.fillPoly(frame, max_area_counter, (255, 255, 255))
         # Закрашивание маленьких контуров чёрным цветом
         cv2.fillPoly(frame, min_area_contour, (0, 0, 0))
+        # Закрашивание многоугольников белым цветом
+        cv2.fillPoly(frame, max_area_counter, (255, 255, 255))
 
     def _mask_frame(self, frame, frame_filter):
         """Заменить белый фон цветным изображением"""
