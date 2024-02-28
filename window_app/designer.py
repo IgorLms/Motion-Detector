@@ -1,6 +1,11 @@
+from typing import Optional
+
 from PyQt5 import QtGui
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QPushButton, QSpacerItem, QLineEdit, QFrame, QMessageBox
 from PyQt5.QtCore import QSize
+
+from services.json_file import get_json
 
 
 class ButtonOpenVideo(QPushButton):
@@ -21,6 +26,56 @@ class ButtonOpenVideo(QPushButton):
         policy_open_camera.setVerticalStretch(0)
         policy_open_camera.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         self.setSizePolicy(policy_open_camera)
+
+
+class Label(QLabel):
+    """Класс лейбла для отображения видео"""
+
+    def __init__(self, parent: Optional[QWidget]):
+        """Инициализация параметров"""
+
+        # Наследование параметров от класса QLabel
+        super().__init__()
+        # Инициализация родителя QWidget
+        self.parent = parent
+        # Массив с координатами исключения детектирования
+        self.coordinates = list()
+        # Флаг для работы с функцией mousePressEvent
+        self.flag = False
+        # Размер кадра
+        self.size_frame = []
+        # Размер лейбла
+        self.size_label = []
+
+    @staticmethod
+    def coordinate_correction(coordinate: int, size: int) -> int:
+        """
+        Коррекция координат точки.
+        :coordinate координаты нажатой мыши
+        :size размер кадра
+        """
+
+        if 0 <= coordinate <= 10:
+            return 0
+        elif size - 10 <= coordinate <= size:
+            return size
+        else:
+            return coordinate
+
+    def mousePressEvent(self, event: Optional[QMouseEvent]) -> None:
+        """Получение координат мыши на лейбле"""
+
+        if self.flag and self.size_label and self.size_frame:
+            # Коэффициенты отношения размера кадра и лейбла
+            kx = self.size_frame[0] / self.size_label[0]
+            ky = self.size_frame[1] / self.size_label[1]
+            # Добавить в список откорректированные координаты мышки
+            self.coordinates.append(
+                [
+                    self.coordinate_correction(int(event.x() * kx), self.size_frame[0]),
+                    self.coordinate_correction(int(event.y() * ky), self.size_frame[1])
+                ]
+            )
 
 
 class ApplicationDesign(QWidget):
@@ -124,7 +179,7 @@ class ApplicationDesign(QWidget):
         # Создание вертикального макета для просмотра видео и кнопок видео
         self.vertical_layout_watch_video = QVBoxLayout()
         # Настройка виджета для видео
-        self.image_label = QLabel(self)
+        self.image_label = Label(self)
         # Создание макета для кнопок
         self.horizontal_layout_button = QHBoxLayout()
         # Настройка кнопки основной поток
@@ -169,7 +224,7 @@ class ApplicationDesign(QWidget):
         """Метод добавления кнопок открытия видео из JSON файла"""
 
         # Прочитаем JSON файл
-        data_json = self._get_json()
+        data_json = get_json('data/data.json')
         # Перебираем JSON файл
         for name, path in data_json.items():
             self._create_button(name, path)
@@ -190,3 +245,8 @@ class ApplicationDesign(QWidget):
         """Генерация ошибки"""
 
         QMessageBox.critical(self, "Ошибка", text, QMessageBox.Ok)
+
+    def get_size(self) -> list:
+        """Отправка размеров лейбла"""
+
+        return [self.image_label.size().width(), self.image_label.size().height()]

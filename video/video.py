@@ -7,6 +7,8 @@ import subprocess
 import re
 import cv2
 
+from services.json_file import get_json
+
 
 class VideoCaptureRTSP(QThread):
     """Просмотр камеры по RTSP потоку"""
@@ -49,6 +51,11 @@ class VideoCaptureRTSP(QThread):
             # Уничтожить все открытые окна
             cv2.destroyAllWindows()
 
+    def get_size(self) -> list:
+        """Получение размера фрейма"""
+
+        return [self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)]
+
     def set_status(self, flag: bool):
         """Изменение статуса"""
 
@@ -72,11 +79,37 @@ class VideoCaptureRTSP(QThread):
                 # Отправка сигнала о существовании корректного кадра
                 self.change_pixmap_signal.emit(frame)
 
+    @staticmethod
+    def mask_coordinates(frame: cv2.typing.MatLike, coordinates: list) -> cv2.typing.MatLike:
+        """Накладывание чёрной маски на кадр видео для исключения детектирования"""
+
+        if coordinates:
+            # Создание нулевой матрицы, размером кадра видео
+            mask = np.zeros(frame.shape, dtype=np.uint8)
+            # Замена значений нулевой матрицы на 255 (из белого цвета в чёрный цвет)
+            mask[mask == 0] = 255
+
+            # Создание массива из списка координат
+            array_coordinates = np.array(coordinates, dtype=np.int32)
+
+            # Рисование на чёрном изображении белых многоугольников по координатам
+            cv2.fillPoly(mask, array_coordinates, (0,) * frame.shape[2])
+
+            # Объединение кадра с видео и маски
+            return cv2.bitwise_and(frame, mask)
+
+        return frame
+
     def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
 
         # Получить кадр из видео в виде логической переменной и массива
         ret, frame = self.__cap.read()
+
+        # Прочитать json файл
+        mask_json = get_json(path_json='data/mask.json')
+        # Накладывание чёрной маски на кадр видео для исключения детектирования
+        frame = self.mask_coordinates(frame, mask_json["coordinates"])
 
         return ret, frame
 

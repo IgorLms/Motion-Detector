@@ -1,11 +1,11 @@
 from PyQt5.QtCore import pyqtSlot, Qt, QThread
-from PyQt5.QtGui import QPixmap, QCloseEvent
+from PyQt5.QtGui import QPixmap, QCloseEvent, QKeyEvent
 from PyQt5 import QtGui
 
 import numpy as np
-import json
 import cv2
 
+from services.json_file import get_json, set_json
 from window_app.designer import ApplicationDesign
 from video.motion_detector import VideoBackgroundSubtractorKNN
 from video.video import VideoCaptureRTSP
@@ -41,19 +41,6 @@ class App(ApplicationDesign):
         # Закрыть приложение
         event.accept()
 
-    @staticmethod
-    def _get_json() -> json:
-        """Чтение JSON файла"""
-
-        return json.load(open('data/data.json'))
-
-    @staticmethod
-    def __update_json(data_json, name: str, path: str) -> None:
-        """Запись в JSON файл"""
-
-        data_json.update({name: path, })
-        json.dump(data_json, open('data/data.json', 'w'), sort_keys=True, indent=2, ensure_ascii=False)
-
     def _add_camera_json(self) -> None:
         """Добавление камеры в JSON файл"""
 
@@ -64,7 +51,7 @@ class App(ApplicationDesign):
             self._create_error("Укажите RTSP поток камеры")
         else:
             # Прочитаем JSON файл
-            data_json = self._get_json()
+            data_json = get_json('data/data.json')
             if self.name_camera.text() in data_json.keys():
                 self._create_error("Название камеры уже существует")
             elif len(data_json) > 10:
@@ -73,7 +60,7 @@ class App(ApplicationDesign):
                 self.rtsp.clear()
             else:
                 # Добавление камеры в JSON файл
-                self.__update_json(data_json, self.name_camera.text(), self.rtsp.text())
+                set_json(data_json, self.name_camera.text(), self.rtsp.text(), 'data/data.json')
                 # Создание новых кнопок
                 self._create_button(self.name_camera.text(), self.rtsp.text())
                 # Отчистить поле RTSP
@@ -189,3 +176,44 @@ class App(ApplicationDesign):
             for button in self.list_button:
                 button.hide()
             self.vertical_line_main.hide()
+
+    @staticmethod
+    def update_array(array: list) -> list:
+        """Редактирование массива для уравнения его размерности"""
+
+        # Узнать максимальную длину массива с координатами
+        max_len = max(len(coordinate) for coordinate in array)
+        # Редактирование массива для уравнения его размерности
+        for coordinate in array:
+            while len(coordinate) < max_len:
+                coordinate.append(coordinate[-1])
+
+        return array
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """
+        По нажатию клавиши F5 активировать функцию получения координат с лейбла.
+        По нажатию клавиши F4 деактивировать функцию получения координат с лейбла и записать их json файл.
+        """
+
+        if event.key() == Qt.Key_F5:
+            # Изменить флаг размера лейбла
+            self.image_label.size_label = self.get_size()
+            # Изменить флаг размера кадра
+            self.image_label.size_frame = self.video.get_size()
+            # Изменить флаг для прослушивания клика мыши по лейблу
+            self.image_label.flag = True
+        elif event.key() == Qt.Key_F4:
+            # Прочитать json файл с координатами
+            mask_json = get_json('data/mask.json')
+            # Добавить в список старых координат новые координаты
+            mask_json["coordinates"].append(self.image_label.coordinates)
+            # Редактирование массива для уравнения его размерности
+            self.update_array(mask_json["coordinates"])
+
+            # Записать координаты маскирования детектирования в json файл
+            set_json(mask_json, "coordinates", mask_json["coordinates"], 'data/mask.json')
+            # Изменить флаг для прослушивания клика мыши по лейблу
+            self.image_label.flag = False
+            # Обнулить список координат для нажатия мышки
+            self.image_label.coordinates = list()
