@@ -204,16 +204,17 @@ class App(ApplicationDesign):
             # Изменить флаг для прослушивания клика мыши по лейблу
             self.image_label.flag = True
         elif event.key() == Qt.Key_F4:
-            # Прочитать json файл с координатами
-            mask_json = get_json('data/mask.json')
-            # Добавить в список старых координат новые координаты
-            mask_json["coordinates"].append(self.image_label.coordinates)
-            # Редактирование массива для уравнения его размерности
-            self.update_array(mask_json["coordinates"])
+            if self.image_label.coordinates:
+                # Прочитать json файл с координатами
+                mask_json = get_json('data/mask.json')
+                # Добавить в список старых координат новые координаты
+                mask_json["coordinates"].append(self.image_label.coordinates)
+                # Редактирование массива для уравнения его размерности
+                self.update_array(mask_json["coordinates"])
 
-            # Записать координаты маскирования детектирования в json файл
-            set_json(mask_json, "coordinates", mask_json["coordinates"], 'data/mask.json')
-            # Изменить флаг для прослушивания клика мыши по лейблу
-            self.image_label.flag = False
-            # Обнулить список координат для нажатия мышки
-            self.image_label.coordinates = list()
+                # Записать координаты маскирования детектирования в json файл
+                set_json(mask_json, "coordinates", mask_json["coordinates"], 'data/mask.json')
+                # Изменить флаг для прослушивания клика мыши по лейблу
+                self.image_label.flag = False
+                # Обнулить список координат для нажатия мышки
+                self.image_label.coordinates = list()
