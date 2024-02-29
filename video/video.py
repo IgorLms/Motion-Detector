@@ -28,6 +28,10 @@ class VideoCaptureRTSP(QThread):
 
         # Сохранение пути до камеры
         self.__path_rtsp = path_rtsp
+
+        self.flag_line = False
+        self.coordinates_line = list()
+
         # Валидация пинга IP адреса
         self.__validate_ping_ip_address()
         # Валидация пути видео
@@ -100,6 +104,13 @@ class VideoCaptureRTSP(QThread):
 
         return frame
 
+    @staticmethod
+    def drawing_lines(frame: cv2.typing.MatLike, coordinates: list) -> None:
+        """Рисование линии"""
+
+        array_coordinates = np.array(coordinates, np.int32)
+        cv2.polylines(frame, array_coordinates, True, (0, 255, 255), 3)
+
     def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
 
@@ -108,8 +119,10 @@ class VideoCaptureRTSP(QThread):
 
         # Прочитать json файл
         mask_json = get_json(path_json='data/mask.json')
-        # Накладывание чёрной маски на кадр видео для исключения детектирования
-        frame = self.mask_coordinates(frame, mask_json["coordinates"])
+
+        if self.flag_line:
+            self.drawing_lines(frame, mask_json["coordinates"])
+            self.drawing_lines(frame, [self.coordinates_line])
 
         return ret, frame
 
@@ -121,7 +134,7 @@ class VideoCaptureRTSP(QThread):
 
         # Проверить, что кадр существует
         self.__validate_ret(ret)
-        
+
         # Установка размера просмотра видео на полный экран
         cv2.namedWindow(name, cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)

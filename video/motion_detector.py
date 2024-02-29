@@ -3,6 +3,7 @@ from cv2 import UMat
 
 import cv2
 
+from services.json_file import get_json
 from video.grey_video import GrayVideoCaptureRTSP
 from video.video import VideoCaptureRTSP
 
@@ -13,6 +14,9 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
     def _get_frame(self) -> [bool, UMat]:
         """Вычитание двух кадров"""
 
+        # Прочитать json файл
+        mask_json = get_json(path_json='data/mask.json')
+
         # Получение двх кадров
         ret1, frame1 = super()._get_frame()
         ret2, frame2 = super()._get_frame()
@@ -21,6 +25,9 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
         ret = ret1 and ret2
 
         if ret:
+            # Накладывание чёрной маски на кадр видео для исключения детектирования
+            frame1 = self.mask_coordinates(frame1, mask_json["coordinates"])
+            frame2 = self.mask_coordinates(frame2, mask_json["coordinates"])
             # Нахождение разницы двух кадров
             frame1 = self._subtract(frame1, frame2)
             # Расширение области объекта
@@ -51,8 +58,12 @@ class VideoBackgroundSubtractorKNN(VideoCaptureRTSP):
     def _get_mask_frame(self, mask: cv2.BackgroundSubtractor) -> tuple:
         """Получение сегментации по маске"""
 
+        # Прочитать json файл
+        mask_json = get_json(path_json='data/mask.json')
         # Получение кадра из видео
         ret, frame = super()._get_frame()
+        # Накладывание чёрной маски на кадр видео для исключения детектирования
+        frame = self.mask_coordinates(frame, mask_json["coordinates"])
         # Получение маски для кадра
         frame_mask = mask.apply(frame)
         # Расширение границ

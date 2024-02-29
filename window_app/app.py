@@ -109,6 +109,8 @@ class App(ApplicationDesign):
     def __update_image(self, frame: QPixmap) -> None:
         """Метод обновления изображения на видео"""
 
+        # Передать координаты нажатия мыши в класс VideoCaptureRTSP
+        self.video.coordinates_line = self.image_label.coordinates
         # По сигналу остановить просмотр видео
         self.__thread.signal_stop_video.connect(self.__stop_video)
         # Преобразование изображения из OpenCV в QPixmap
@@ -203,6 +205,8 @@ class App(ApplicationDesign):
             self.image_label.size_frame = self.video.get_size()
             # Изменить флаг для прослушивания клика мыши по лейблу
             self.image_label.flag = True
+            # Изменить флаг для рисования линии
+            self.video.flag_line = True
         elif event.key() == Qt.Key_F4:
             if self.image_label.coordinates:
                 # Прочитать json файл с координатами
@@ -211,10 +215,11 @@ class App(ApplicationDesign):
                 mask_json["coordinates"].append(self.image_label.coordinates)
                 # Редактирование массива для уравнения его размерности
                 self.update_array(mask_json["coordinates"])
-
                 # Записать координаты маскирования детектирования в json файл
                 set_json(mask_json, "coordinates", mask_json["coordinates"], 'data/mask.json')
-                # Изменить флаг для прослушивания клика мыши по лейблу
-                self.image_label.flag = False
-                # Обнулить список координат для нажатия мышки
-                self.image_label.coordinates = list()
+            # Изменить флаг для прослушивания клика мыши по лейблу
+            self.image_label.flag = False
+            # Изменить флаг для рисования линии
+            self.video.flag_line = False
+            # Обнулить список координат для нажатия мышки
+            self.image_label.coordinates = list()
