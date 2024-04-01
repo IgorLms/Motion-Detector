@@ -236,7 +236,9 @@ class VideoCaptureRTSP(QThread):
 
         if isinstance(self.__path_rtsp, str):
             # Поиск ip в RTSP ссылке
-            ip = re.findall("(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", self.__path_rtsp)
+            ip = re.findall(
+                r"(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)",
+                self.__path_rtsp)
 
             # Если найден хоть один ip адрес в RTSP, то пингануть его
             if len(ip) > 0:
