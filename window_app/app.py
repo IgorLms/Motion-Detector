@@ -204,22 +204,22 @@ class App(ApplicationDesign):
             # Изменить флаг размера кадра
             self.image_label.size_frame = self.video.get_size()
             # Изменить флаг для прослушивания клика мыши по лейблу
-            self.image_label.flag = True
+            self.image_label.flag = "mask"
             # Изменить флаг для рисования линии
-            self.video.flag_line = True
+            self.video.flag_line = "mask"
         elif event.key() == Qt.Key_F4:
             if self.image_label.coordinates:
                 # Прочитать json файл с координатами
                 mask_json = get_json('data/mask.json')
                 # Добавить в список старых координат новые координаты
-                mask_json["coordinates"].append(self.image_label.coordinates)
+                mask_json[self.video.flag_line].append(self.image_label.coordinates)
                 # Редактирование массива для уравнения его размерности
-                self.update_array(mask_json["coordinates"])
+                self.update_array(mask_json[self.video.flag_line])
                 # Записать координаты маскирования детектирования в json файл
-                set_json(mask_json, "coordinates", mask_json["coordinates"], 'data/mask.json')
+                set_json(mask_json, self.video.flag_line, mask_json[self.video.flag_line], 'data/mask.json')
             # Изменить флаг для прослушивания клика мыши по лейблу
-            self.image_label.flag = False
+            self.image_label.flag = ''
             # Изменить флаг для рисования линии
-            self.video.flag_line = False
+            self.video.flag_line = ''
             # Обнулить список координат для нажатия мышки
             self.image_label.coordinates = list()

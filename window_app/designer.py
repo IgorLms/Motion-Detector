@@ -41,7 +41,7 @@ class Label(QLabel):
         # Массив с координатами исключения детектирования
         self.coordinates = list()
         # Флаг для работы с функцией mousePressEvent
-        self.flag = False
+        self.flag = ''
         # Размер кадра
         self.size_frame = []
         # Размер лейбла
@@ -65,17 +65,18 @@ class Label(QLabel):
     def mousePressEvent(self, event: Optional[QMouseEvent]) -> None:
         """Получение координат мыши на лейбле"""
 
-        if self.flag and self.size_label and self.size_frame:
+        if self.size_label and self.size_frame:
             # Коэффициенты отношения размера кадра и лейбла
             kx = self.size_frame[0] / self.size_label[0]
             ky = self.size_frame[1] / self.size_label[1]
-            # Добавить в список откорректированные координаты мышки
-            self.coordinates.append(
-                [
-                    self.coordinate_correction(int(event.x() * kx), self.size_frame[0]),
-                    self.coordinate_correction(int(event.y() * ky), self.size_frame[1])
-                ]
-            )
+            if self.flag == "mask":
+                # Добавить в список откорректированные координаты мышки
+                self.coordinates.append(
+                    [
+                        self.coordinate_correction(int(event.x() * kx), self.size_frame[0]),
+                        self.coordinate_correction(int(event.y() * ky), self.size_frame[1])
+                    ]
+                )
 
 
 class ApplicationDesign(QWidget):

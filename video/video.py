@@ -29,7 +29,7 @@ class VideoCaptureRTSP(QThread):
         # Сохранение пути до камеры
         self.__path_rtsp = path_rtsp
 
-        self.flag_line = False
+        self.flag_line = ''
         self.coordinates_line = list()
 
         # Валидация пинга IP адреса
@@ -84,7 +84,7 @@ class VideoCaptureRTSP(QThread):
                 self.change_pixmap_signal.emit(frame)
 
     @staticmethod
-    def mask_coordinates(frame: cv2.typing.MatLike, coordinates: list) -> cv2.typing.MatLike:
+    def mask_coordinates(frame: cv2.typing.MatLike, coordinates: list) -> UMat:
         """Накладывание чёрной маски на кадр видео для исключения детектирования"""
 
         if coordinates:
@@ -120,8 +120,8 @@ class VideoCaptureRTSP(QThread):
         # Прочитать json файл
         mask_json = get_json(path_json='data/mask.json')
 
-        if self.flag_line:
-            self.drawing_lines(frame, mask_json["coordinates"])
+        if self.flag_line == "mask":
+            self.drawing_lines(frame, mask_json[self.flag_line])
             self.drawing_lines(frame, [self.coordinates_line])
 
         return ret, frame

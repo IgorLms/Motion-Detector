@@ -26,8 +26,8 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
 
         if ret:
             # Накладывание чёрной маски на кадр видео для исключения детектирования
-            frame1 = self.mask_coordinates(frame1, mask_json["coordinates"])
-            frame2 = self.mask_coordinates(frame2, mask_json["coordinates"])
+            frame1 = self.mask_coordinates(frame1, mask_json["mask"])
+            frame2 = self.mask_coordinates(frame2, mask_json["mask"])
             # Нахождение разницы двух кадров
             frame1 = self._subtract(frame1, frame2)
             # Расширение области объекта
@@ -63,7 +63,7 @@ class VideoBackgroundSubtractorKNN(VideoCaptureRTSP):
         # Получение кадра из видео
         ret, frame = super()._get_frame()
         # Накладывание чёрной маски на кадр видео для исключения детектирования
-        frame = self.mask_coordinates(frame, mask_json["coordinates"])
+        frame = self.mask_coordinates(frame, mask_json["mask"])
         # Получение маски для кадра
         frame_mask = mask.apply(frame)
         # Расширение границ
