@@ -14,9 +14,6 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
     def _get_frame(self) -> [bool, UMat]:
         """Вычитание двух кадров"""
 
-        # Прочитать json файл
-        mask_json = get_json(path_json='data/mask.json')
-
         # Получение двх кадров
         ret1, frame1 = super()._get_frame()
         ret2, frame2 = super()._get_frame()
@@ -26,8 +23,8 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
 
         if ret:
             # Накладывание чёрной маски на кадр видео для исключения детектирования
-            frame1 = self.mask_coordinates(frame1, mask_json["mask"])
-            frame2 = self.mask_coordinates(frame2, mask_json["mask"])
+            frame1 = self.mask_coordinates(frame1, self.mask_json["mask"])
+            frame2 = self.mask_coordinates(frame2, self.mask_json["mask"])
             # Нахождение разницы двух кадров
             frame1 = self._subtract(frame1, frame2)
             # Расширение области объекта
@@ -40,6 +37,8 @@ class SubtractionFrame(GrayVideoCaptureRTSP):
             frame1 = self._highlighting_white_object(frame1)
             # Удаление шума
             frame1 = self._morphed(frame=frame1, mode='open', ksize=3)
+            # Нарисовать линии
+            self.drawing_lines(frame1, self.mask_json["line"])
 
         return ret, frame1
 
@@ -58,12 +57,10 @@ class VideoBackgroundSubtractorKNN(VideoCaptureRTSP):
     def _get_mask_frame(self, mask: cv2.BackgroundSubtractor) -> tuple:
         """Получение сегментации по маске"""
 
-        # Прочитать json файл
-        mask_json = get_json(path_json='data/mask.json')
         # Получение кадра из видео
         ret, frame = super()._get_frame()
         # Накладывание чёрной маски на кадр видео для исключения детектирования
-        frame = self.mask_coordinates(frame, mask_json["mask"])
+        frame = self.mask_coordinates(frame, self.mask_json["mask"])
         # Получение маски для кадра
         frame_mask = mask.apply(frame)
         # Расширение границ
@@ -116,5 +113,7 @@ class VideoBackgroundSubtractorKNN(VideoCaptureRTSP):
         self._fill_poly(min_area_contour, max_area_counter, frame_filter)
         # Заменить белый фон цветным изображением
         frame = self._mask_frame(frame, frame_filter)
+        # Нарисовать линии
+        self.drawing_lines(frame, self.mask_json["line"])
 
         return ret, frame

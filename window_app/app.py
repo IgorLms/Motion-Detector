@@ -34,6 +34,12 @@ class App(ApplicationDesign):
         self.open_video_full.clicked.connect(self.__full_screen_video)
         self.add_camera.clicked.connect(self._add_camera_json)
 
+        # Словарь ключ: нажатая кнопка, значение: ключ в json файле
+        self.key = {
+            Qt.Key_F5: "mask",
+            Qt.Key_F6: "line"
+        }
+
     def closeEvent(self, event: QCloseEvent) -> None:
         """Метод закрытия окна"""
         # Остановить просмотр видео
@@ -194,19 +200,19 @@ class App(ApplicationDesign):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """
-        По нажатию клавиши F5 активировать функцию получения координат с лейбла.
+        По нажатию клавиши F5, F6 активировать функцию получения координат с лейбла.
         По нажатию клавиши F4 деактивировать функцию получения координат с лейбла и записать их json файл.
         """
 
-        if event.key() == Qt.Key_F5:
+        if event.key() in [Qt.Key_F5, Qt.Key_F6]:
             # Изменить флаг размера лейбла
             self.image_label.size_label = self.get_size()
             # Изменить флаг размера кадра
             self.image_label.size_frame = self.video.get_size()
             # Изменить флаг для прослушивания клика мыши по лейблу
-            self.image_label.flag = "mask"
+            self.image_label.flag = self.key[event.key()]
             # Изменить флаг для рисования линии
-            self.video.flag_line = "mask"
+            self.video.flag_line = self.key[event.key()]
         elif event.key() == Qt.Key_F4:
             if self.image_label.coordinates:
                 # Прочитать json файл с координатами
@@ -216,10 +222,17 @@ class App(ApplicationDesign):
                 # Редактирование массива для уравнения его размерности
                 self.update_array(mask_json[self.video.flag_line])
                 # Записать координаты маскирования детектирования в json файл
-                set_json(mask_json, self.video.flag_line, mask_json[self.video.flag_line], 'data/mask.json')
+                # Обновить атрибут mask_json данных в классе VideoCaptureRTSP
+                self.filter_video.mask_json = set_json(
+                    mask_json,
+                    self.video.flag_line,
+                    mask_json[self.video.flag_line],
+                    'data/mask.json'
+                )
             # Изменить флаг для прослушивания клика мыши по лейблу
             self.image_label.flag = ''
             # Изменить флаг для рисования линии
             self.video.flag_line = ''
             # Обнулить список координат для нажатия мышки
             self.image_label.coordinates = list()
+            self.image_label.coordinates_line = list()

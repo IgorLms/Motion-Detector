@@ -29,8 +29,12 @@ class VideoCaptureRTSP(QThread):
         # Сохранение пути до камеры
         self.__path_rtsp = path_rtsp
 
+        # Флаг для управления отображением линий
         self.flag_line = ''
+        # Координаты не занесённые в json файл
         self.coordinates_line = list()
+        # Координаты json файла
+        self.mask_json = get_json(path_json='data/mask.json')
 
         # Валидация пинга IP адреса
         self.__validate_ping_ip_address()
@@ -105,11 +109,19 @@ class VideoCaptureRTSP(QThread):
         return frame
 
     @staticmethod
-    def drawing_lines(frame: cv2.typing.MatLike, coordinates: list) -> None:
-        """Рисование линии"""
+    def drawing_polylines(frame: cv2.typing.MatLike, coordinates: list) -> None:
+        """Рисование многоугольника"""
 
         array_coordinates = np.array(coordinates, np.int32)
         cv2.polylines(frame, array_coordinates, True, (0, 255, 255), 3)
+
+    @staticmethod
+    def drawing_lines(frame: cv2.typing.MatLike, coordinates: list) -> None:
+        """Рисование линии"""
+
+        for coordinates_1 in coordinates:
+            for coordinates_2 in coordinates_1:
+                cv2.line(frame, tuple(coordinates_2[0]), tuple(coordinates_2[1]), (0, 255, 255), 5)
 
     def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
@@ -117,12 +129,12 @@ class VideoCaptureRTSP(QThread):
         # Получить кадр из видео в виде логической переменной и массива
         ret, frame = self.__cap.read()
 
-        # Прочитать json файл
-        mask_json = get_json(path_json='data/mask.json')
-
-        if self.flag_line == "mask":
-            self.drawing_lines(frame, mask_json[self.flag_line])
+        if self.flag_line == "line":
+            self.drawing_lines(frame, self.mask_json[self.flag_line])
             self.drawing_lines(frame, [self.coordinates_line])
+        elif self.flag_line == "mask":
+            self.drawing_polylines(frame, self.mask_json[self.flag_line])
+            self.drawing_polylines(frame, [self.coordinates_line])
 
         return ret, frame
 

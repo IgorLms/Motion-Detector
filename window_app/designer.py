@@ -2,7 +2,16 @@ from typing import Optional
 
 from PyQt5 import QtGui
 from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QPushButton, QSpacerItem, QLineEdit, QFrame, QMessageBox
+from PyQt5.QtWidgets import (QWidget,
+                             QLabel,
+                             QVBoxLayout,
+                             QSizePolicy,
+                             QHBoxLayout,
+                             QPushButton,
+                             QSpacerItem,
+                             QLineEdit,
+                             QFrame,
+                             QMessageBox)
 from PyQt5.QtCore import QSize
 
 from services.json_file import get_json
@@ -38,8 +47,10 @@ class Label(QLabel):
         super().__init__()
         # Инициализация родителя QWidget
         self.parent = parent
-        # Массив с координатами исключения детектирования
+        # Массив с координатами
         self.coordinates = list()
+        # Массив с координатами линии
+        self.coordinates_line = list()
         # Флаг для работы с функцией mousePressEvent
         self.flag = ''
         # Размер кадра
@@ -51,8 +62,8 @@ class Label(QLabel):
     def coordinate_correction(coordinate: int, size: int) -> int:
         """
         Коррекция координат точки.
-        :coordinate координаты нажатой мыши
-        :size размер кадра
+        coordinate координаты нажатой мыши
+        size размер кадра
         """
 
         if 0 <= coordinate <= 10:
@@ -62,21 +73,33 @@ class Label(QLabel):
         else:
             return coordinate
 
+    def __get_coordinate_correction(self, event: Optional[QMouseEvent]) -> list[int]:
+        """Формирование массива координат нажатой клавиши мыши"""
+
+        # Коэффициенты отношения размера кадра и лейбла
+        kx = self.size_frame[0] / self.size_label[0]
+        ky = self.size_frame[1] / self.size_label[1]
+        coordinates = [
+            self.coordinate_correction(int(event.x() * kx), int(self.size_frame[0])),
+            self.coordinate_correction(int(event.y() * ky), int(self.size_frame[1]))
+        ]
+
+        return coordinates
+
     def mousePressEvent(self, event: Optional[QMouseEvent]) -> None:
         """Получение координат мыши на лейбле"""
 
         if self.size_label and self.size_frame:
-            # Коэффициенты отношения размера кадра и лейбла
-            kx = self.size_frame[0] / self.size_label[0]
-            ky = self.size_frame[1] / self.size_label[1]
             if self.flag == "mask":
                 # Добавить в список откорректированные координаты мышки
-                self.coordinates.append(
-                    [
-                        self.coordinate_correction(int(event.x() * kx), self.size_frame[0]),
-                        self.coordinate_correction(int(event.y() * ky), self.size_frame[1])
-                    ]
-                )
+                self.coordinates.append(self.__get_coordinate_correction(event))
+            elif self.flag == "line":
+                # Добавить в список откорректированные координаты мышки
+                self.coordinates_line.append(self.__get_coordinate_correction(event))
+                if len(self.coordinates_line) == 2:
+                    # Если две точки уже существуют в массиве, то добавить их в общие координаты
+                    self.coordinates.append(self.coordinates_line)
+                    self.coordinates_line = list()
 
 
 class ApplicationDesign(QWidget):

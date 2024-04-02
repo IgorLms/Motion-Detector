@@ -11,7 +11,7 @@ def get_json(path_json: str) -> json:
     return json.load(open(path_json))
 
 
-def set_json(data_json, name: str, data: str, path_json: str) -> None:
+def set_json(data_json, name: str, data: str, path_json: str) -> json:
     """
     Запись в JSON файл
     :data_json данные с json файла
@@ -22,3 +22,5 @@ def set_json(data_json, name: str, data: str, path_json: str) -> None:
 
     data_json.update({name: data, })
     json.dump(data_json, open(path_json, 'w'), sort_keys=True, indent=2, ensure_ascii=False)
+
+    return data_json
