@@ -119,9 +119,8 @@ class VideoCaptureRTSP(QThread):
     def drawing_lines(frame: cv2.typing.MatLike, coordinates: list) -> None:
         """Рисование линии"""
 
-        for coordinates_1 in coordinates:
-            for coordinates_2 in coordinates_1:
-                cv2.line(frame, tuple(coordinates_2[0]), tuple(coordinates_2[1]), (0, 255, 255), 5)
+        for coordinate in coordinates:
+            cv2.line(frame, tuple(coordinate[0]), tuple(coordinate[1]), (0, 255, 255), 5)
 
     def _get_frame(self) -> [bool, cv2.typing.MatLike]:
         """Получить кадр из видео в виде массива"""
@@ -131,10 +130,12 @@ class VideoCaptureRTSP(QThread):
 
         if self.flag_line == "line":
             self.drawing_lines(frame, self.mask_json[self.flag_line])
-            self.drawing_lines(frame, [self.coordinates_line])
+            if self.coordinates_line:
+                self.drawing_lines(frame, self.coordinates_line)
         elif self.flag_line == "mask":
             self.drawing_polylines(frame, self.mask_json[self.flag_line])
-            self.drawing_polylines(frame, [self.coordinates_line])
+            if self.coordinates_line:
+                self.drawing_polylines(frame, [self.coordinates_line])
 
         return ret, frame
 

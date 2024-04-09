@@ -1,17 +1,20 @@
 import json
 
 
-def get_json(path_json: str) -> json:
+def get_json(path_json: str) -> dict:
     """
     Чтение JSON файла
     :path_json путь до json файла
     :return данные с json файла
     """
 
-    return json.load(open(path_json))
+    with open(path_json) as f:
+        data = json.load(f)
+
+    return data
 
 
-def set_json(data_json, name: str, data: str, path_json: str) -> json:
+def set_json(data_json: dict, name: str, data: str, path_json: str) -> dict:
     """
     Запись в JSON файл
     :data_json данные с json файла
@@ -21,6 +24,7 @@ def set_json(data_json, name: str, data: str, path_json: str) -> json:
     """
 
     data_json.update({name: data, })
-    json.dump(data_json, open(path_json, 'w'), sort_keys=True, indent=2, ensure_ascii=False)
+    with open(path_json, 'w') as f:
+        json.dump(data_json, f, sort_keys=True, indent=2, ensure_ascii=False)
 
     return data_json

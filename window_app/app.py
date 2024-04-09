@@ -218,12 +218,15 @@ class App(ApplicationDesign):
                 # Прочитать json файл с координатами
                 mask_json = get_json('data/mask.json')
                 # Добавить в список старых координат новые координаты
-                mask_json[self.video.flag_line].append(self.image_label.coordinates)
+                if self.video.flag_line == 'line':
+                    mask_json[self.video.flag_line].extend(self.image_label.coordinates)
+                elif self.video.flag_line == 'mask':
+                    mask_json[self.video.flag_line].append(self.image_label.coordinates)
                 # Редактирование массива для уравнения его размерности
                 self.update_array(mask_json[self.video.flag_line])
                 # Записать координаты маскирования детектирования в json файл
                 # Обновить атрибут mask_json данных в классе VideoCaptureRTSP
-                self.filter_video.mask_json = set_json(
+                self.video.mask_json = self.filter_video.mask_json = set_json(
                     mask_json,
                     self.video.flag_line,
                     mask_json[self.video.flag_line],
