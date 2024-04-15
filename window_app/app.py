@@ -1,9 +1,10 @@
-from PyQt5.QtCore import pyqtSlot, Qt, QThread
-from PyQt5.QtGui import QPixmap, QCloseEvent, QKeyEvent
+from PyQt5.QtCore import pyqtSlot, Qt, QThread, QSize
+from PyQt5.QtGui import QPixmap, QCloseEvent, QKeyEvent, QIcon
 from PyQt5 import QtGui
 
 import numpy as np
 import cv2
+from PyQt5.QtWidgets import QMainWindow, QLabel, QMenuBar, QMenu, QAction, QSizePolicy
 
 from services.json_file import get_json, set_json
 from window_app.designer import ApplicationDesign
@@ -29,10 +30,10 @@ class App(ApplicationDesign):
         self.filter_video = VideoBackgroundSubtractorKNN(self.__path)
 
         # Привязка функций к кнопкам
-        self.open_video.clicked.connect(self.__run_open_video)
-        self.open_filter_video.clicked.connect(self.__run_open_filter_video)
-        self.open_video_full.clicked.connect(self.__full_screen_video)
-        self.add_camera.clicked.connect(self._add_camera_json)
+        # self.open_video.clicked.connect(self.__run_open_video)
+        # self.open_filter_video.clicked.connect(self.__run_open_filter_video)
+        # self.open_video_full.clicked.connect(self.__full_screen_video)
+        # self.add_camera.clicked.connect(self._add_camera_json)
 
         # Словарь ключ: нажатая кнопка, значение: ключ в json файле
         self.key = {

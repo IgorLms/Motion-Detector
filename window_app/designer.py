@@ -1,46 +1,21 @@
 from typing import Optional
-
-from PyQt5 import QtGui
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import (QWidget,
                              QLabel,
-                             QVBoxLayout,
                              QSizePolicy,
-                             QHBoxLayout,
-                             QPushButton,
-                             QSpacerItem,
-                             QLineEdit,
-                             QFrame,
-                             QMessageBox)
-from PyQt5.QtCore import QSize
+                             QMessageBox,
+                             QMainWindow,
+                             QMenu,
+                             QAction)
+from PyQt5.QtCore import QSize, Qt
 
 from services.json_file import get_json
-
-
-class ButtonOpenVideo(QPushButton):
-    """Класс динамического создания кнопки открытия камеры"""
-
-    def __init__(self, name: str, path: str):
-        """Инициализация параметров"""
-
-        # Наследование параметров от класса QPushButton
-        super().__init__()
-        # RTSP ссылка к камере
-        self.path = path
-        # Название камеры отобразить в названии кнопки
-        self.setText(name)
-        # Настройка вертикального и горизонтального отображения кнопки
-        policy_open_camera = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        policy_open_camera.setHorizontalStretch(0)
-        policy_open_camera.setVerticalStretch(0)
-        policy_open_camera.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
-        self.setSizePolicy(policy_open_camera)
 
 
 class Label(QLabel):
     """Класс лейбла для отображения видео"""
 
-    def __init__(self, parent: Optional[QWidget]):
+    def __init__(self, parent: Optional[QWidget]) -> None:
         """Инициализация параметров"""
 
         # Наследование параметров от класса QLabel
@@ -102,19 +77,14 @@ class Label(QLabel):
                     self.coordinates_line = list()
 
 
-class ApplicationDesign(QWidget):
+class ApplicationDesign(QMainWindow):
     """Класс для дизайна приложения"""
 
-    def __init__(self):
-        """Инициализация параметров"""
+    def __init__(self) -> None:
+        """Инициализация"""
 
-        # Наследование параметров от класса QWidget
         super().__init__()
 
-        # Массив экземпляров класса ButtonOpenVideo
-        self.list_button = list()
-
-        '''Настройка окна'''
         # Заголовок окна
         self.setWindowTitle("Видеонаблюдение")
         # Установка размера окна при открытии
@@ -127,143 +97,114 @@ class ApplicationDesign(QWidget):
         self.setSizePolicy(size_policy)
         # Установка минимального размера окна
         self.setMinimumSize(QSize(640, 480))
+        # Создание главного макета для просмотра видео
+        self.image_label = QLabel(self)
+        self.image_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        self.setCentralWidget(self.image_label)
+        # Создание меню
+        self._create_menu()
 
-        '''Настройка макета'''
-        # Создание главного макета
-        self.horizontal_layout_main = QHBoxLayout(self)
-        # Создание макета для добавления и открытия видео
-        self.vertical_layout_open_video = QVBoxLayout()
-        # Добавление виджета заголовка "Добавление камеры"
-        self.add_camera_title = QLabel(self)
-        self.add_camera_title.setText('Добавление камеры')
-        font_add_camera_title = QtGui.QFont()
-        font_add_camera_title.setBold(True)
-        font_add_camera_title.setWeight(75)
-        self.add_camera_title.setFont(font_add_camera_title)
-        # Добавление виджета заголовка "Название камеры"
-        self.name_camera_title = QLabel(self)
-        self.name_camera_title.setText('Название камеры')
-        # Добавление виджета поля названия камеры
-        self.name_camera = QLineEdit(self)
-        policy_name_camera = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        policy_name_camera.setHorizontalStretch(0)
-        policy_name_camera.setVerticalStretch(0)
-        policy_name_camera.setHeightForWidth(self.name_camera.sizePolicy().hasHeightForWidth())
-        self.name_camera.setSizePolicy(policy_name_camera)
-        # Добавление виджета заголовка "RTSP"
-        self.rtsp_title = QLabel(self)
-        self.rtsp_title.setText('RTSP')
-        # Добавление виджета поля RTSP
-        self.rtsp = QLineEdit(self)
-        policy_rtsp = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        policy_rtsp.setHorizontalStretch(0)
-        policy_rtsp.setVerticalStretch(0)
-        policy_rtsp.setHeightForWidth(self.rtsp.sizePolicy().hasHeightForWidth())
-        self.rtsp.setSizePolicy(policy_rtsp)
-        # Настройка кнопки добавить камеру
-        self.add_camera = QPushButton(self)
-        self.add_camera.setText('Добавить камеру')
-        policy_add_camera = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        policy_add_camera.setHorizontalStretch(0)
-        policy_add_camera.setVerticalStretch(0)
-        policy_add_camera.setHeightForWidth(self.add_camera.sizePolicy().hasHeightForWidth())
-        self.add_camera.setSizePolicy(policy_add_camera)
-        # Добавление горизонтальной линии
-        self.add_camera_line = QFrame(self)
-        font_add_camera_line = QtGui.QFont()
-        font_add_camera_line.setBold(False)
-        font_add_camera_line.setWeight(50)
-        self.add_camera_line.setFont(font_add_camera_line)
-        self.add_camera_line.setFrameShape(QFrame.HLine)
-        self.add_camera_line.setFrameShadow(QFrame.Sunken)
-        # Добавление виджета заголовка "Открытие камеры"
-        self.open_camera_title = QLabel(self)
-        self.open_camera_title.setText('Открытие камеры')
-        font_open_camera_title = QtGui.QFont()
-        font_open_camera_title.setBold(True)
-        font_open_camera_title.setWeight(75)
-        self.open_camera_title.setFont(font_open_camera_title)
-        # Добавление прокладки для смещения открытия и добавления видео к верху
-        self.vertical_spacer_open_camera = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        # Добавление виджетов на макеты
-        self.vertical_layout_open_video.addWidget(self.add_camera_title)
-        self.vertical_layout_open_video.addWidget(self.name_camera_title)
-        self.vertical_layout_open_video.addWidget(self.name_camera)
-        self.vertical_layout_open_video.addWidget(self.rtsp_title)
-        self.vertical_layout_open_video.addWidget(self.rtsp)
-        self.vertical_layout_open_video.addWidget(self.add_camera)
-        self.vertical_layout_open_video.addWidget(self.add_camera_line)
-        self.vertical_layout_open_video.addWidget(self.open_camera_title)
-        self.vertical_layout_open_video.addItem(self.vertical_spacer_open_camera)
-        self.__add_button_open_video()
-        # Добавление вертикальной линии для разделения области просмотра и добавления
-        self.vertical_line_main = QFrame(self)
-        self.vertical_line_main.setFrameShape(QFrame.VLine)
-        self.vertical_line_main.setFrameShadow(QFrame.Sunken)
-        # Создание вертикального макета для просмотра видео и кнопок видео
-        self.vertical_layout_watch_video = QVBoxLayout()
-        # Настройка виджета для видео
-        self.image_label = Label(self)
-        # Создание макета для кнопок
-        self.horizontal_layout_button = QHBoxLayout()
-        # Настройка кнопки основной поток
-        self.open_video = QPushButton(self)
-        self.open_video.setText('Основной поток')
-        policy_open_video = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        policy_open_video.setHorizontalStretch(0)
-        policy_open_video.setVerticalStretch(0)
-        policy_open_video.setHeightForWidth(self.open_video.sizePolicy().hasHeightForWidth())
-        self.open_video.setSizePolicy(policy_open_video)
-        # Настройка кнопки фильтр
-        self.open_filter_video = QPushButton(self)
-        self.open_filter_video.setText('Фильтр')
-        policy_open_filter_video = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        policy_open_filter_video.setHorizontalStretch(0)
-        policy_open_filter_video.setVerticalStretch(0)
-        policy_open_filter_video.setHeightForWidth(self.open_filter_video.sizePolicy().hasHeightForWidth())
-        self.open_filter_video.setSizePolicy(policy_open_filter_video)
-        # Настройка кнопки полноэкранный
-        self.open_video_full = QPushButton(self)
-        self.open_video_full.setText('Полноэкранный')
-        policy_open_video_full = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        policy_open_video_full.setHorizontalStretch(0)
-        policy_open_video_full.setVerticalStretch(0)
-        policy_open_video_full.setHeightForWidth(self.open_video_full.sizePolicy().hasHeightForWidth())
-        self.open_video_full.setSizePolicy(policy_open_video_full)
-        # Добавление прокладки для смещения кнопок к левому углу
-        horizontal_spacer_button = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Preferred)
-        # Добавление виджетов на макеты
-        self.vertical_layout_watch_video.addWidget(self.image_label)
-        self.horizontal_layout_button.addWidget(self.open_video)
-        self.horizontal_layout_button.addWidget(self.open_filter_video)
-        self.horizontal_layout_button.addItem(horizontal_spacer_button)
-        self.horizontal_layout_button.addWidget(self.open_video_full)
-        self.vertical_layout_watch_video.addLayout(self.horizontal_layout_button)
-        # Добавление макетов на главный макет
-        self.horizontal_layout_main.addLayout(self.vertical_layout_open_video)
-        self.horizontal_layout_main.addWidget(self.vertical_line_main)
-        self.horizontal_layout_main.addLayout(self.vertical_layout_watch_video)
+    def _create_menu(self) -> None:
+        """
+        Создание меню
+        """
 
-    def __add_button_open_video(self) -> None:
-        """Метод добавления кнопок открытия видео из JSON файла"""
+        # Словарь для названий элементов меню
+        self.name_element = {
+            "add": "Добавить",
+            "delete": "Удалить",
+            "save": "Сохранить",
+            "camera": "Камера",
+            "mask": "Маска",
+            "grid": "Сетка",
+            "name": "Название",
+            "edit": "Редактирование",
+            "watch": "Просмотр",
+            "main_thread": "Основной поток",
+            "filter_1": "Фильтр 1",
+            "filter_2": "Фильтр 2",
+            "full_screen": "Полноэкранный",
+        }
 
-        # Прочитаем JSON файл
+        # Инициализация меню
+        self.menu = self.menuBar()
+        # Инициализация списка меню
+        self._create_actions_edit()
+        # Инициализация меню из раздела редактирования
+        self._create_menu_edit()
+        # Инициализация меню из раздела просмотр
+        self._create_menu_watch()
+
+    def _create_menu_edit(self) -> None:
+        """
+        Создание меню редактирование
+        """
+
+        # Добавление меню редактирование
+        edit_menu = QMenu(self.name_element.get("edit"), self)
+        self.menu.addMenu(edit_menu)
+        # Добавление раздела камера
+        camera_edit_menu = edit_menu.addMenu(self.name_element.get("camera"))
+        camera_edit_menu.addAction(self.camera_add_action)
+        camera_delete_menu = camera_edit_menu.addMenu(self.name_element.get("delete"))
+        camera_delete_menu.addAction(*self.list_camera)
+        # Добавление раздела маска
+        mask_edit_menu = edit_menu.addMenu(self.name_element.get("mask"))
+        mask_edit_menu.addAction(self.mask_add_action)
+        mask_edit_menu.addAction(self.mask_delete_action)
+        mask_edit_menu.addAction(self.mask_save_action)
+        # Добавление раздела сетка
+        grid_edit_menu = edit_menu.addMenu(self.name_element.get("grid"))
+        grid_edit_menu.addAction(self.grid_add_action)
+        grid_edit_menu.addAction(self.grid_delete_action)
+        grid_edit_menu.addAction(self.grid_save_action)
+        # Добавление раздела название
+        name_edit_menu = edit_menu.addMenu(self.name_element.get("name"))
+        name_edit_menu.addAction(self.name_add_action)
+        name_edit_menu.addAction(self.name_delete_action)
+        name_edit_menu.addAction(self.name_save_action)
+
+    def _create_menu_watch(self) -> None:
+        """
+        Создание меню просмотра
+        """
+
+        # Добавление меню просмотр
+        watch_menu = QMenu(self.name_element.get("watch"), self)
+        self.menu.addMenu(watch_menu)
+        # Добавление раздела основного потока
+        main_thread_menu = watch_menu.addMenu(self.name_element.get("main_thread"))
+        main_thread_menu.addAction(*self.list_camera)
+        # Добавление раздела фильтр 1
+        filter_1_menu = watch_menu.addMenu(self.name_element.get("filter_1"))
+        filter_1_menu.addAction(*self.list_camera)
+        # Добавление раздела фильтр 2
+        filter_2_menu = watch_menu.addMenu(self.name_element.get("filter_2"))
+        filter_2_menu.addAction(*self.list_camera)
+        # Добавление раздела полноэкранного просмотра
+        watch_menu.addAction(self.name_element.get("full_screen"))
+
+    def _create_actions_edit(self) -> None:
+        """
+        Инициализация списка меню
+        """
+        # Инициализация списка камер
         data_json = get_json('data/data.json')
-        # Перебираем JSON файл
-        for name, path in data_json.items():
-            self._create_button(name, path)
-
-    def _create_button(self, name: str, path: str) -> None:
-        """Метод создания кнопки"""
-
-        # Создаём кнопку на основе класса ButtonOpenVideo
-        button = ButtonOpenVideo(name, path)
-        # Привязываем кнопку к функции
-        button.clicked.connect(lambda ch, path_rtsp=button.path: self._button_open_video(path_rtsp))
-        # Добавляем кнопку на макет
-        self.vertical_layout_open_video.insertWidget(self.vertical_layout_open_video.count() - 1, button)
-        # Добавляем экземпляр кнопки в массив
-        self.list_button.append(button)
+        self.list_camera = [QAction(name) for name, path in data_json.items()]
+        # Список добавить камеры
+        self.camera_add_action = QAction(self.name_element.get("add"), self)
+        # Список добавить, удалить, сохранить маску
+        self.mask_add_action = QAction(self.name_element.get("add"), self)
+        self.mask_delete_action = QAction(self.name_element.get("delete"), self)
+        self.mask_save_action = QAction(self.name_element.get("save"), self)
+        # Список добавить, удалить, сохранить сетку
+        self.grid_add_action = QAction(self.name_element.get("add"), self)
+        self.grid_delete_action = QAction(self.name_element.get("delete"), self)
+        self.grid_save_action = QAction(self.name_element.get("save"), self)
+        # Список добавить, удалить, сохранить название
+        self.name_add_action = QAction(self.name_element.get("add"), self)
+        self.name_delete_action = QAction(self.name_element.get("delete"), self)
+        self.name_save_action = QAction(self.name_element.get("save"), self)
 
     def _create_error(self, text: str) -> None:
         """Генерация ошибки"""
