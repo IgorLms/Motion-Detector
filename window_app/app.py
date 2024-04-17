@@ -1,10 +1,9 @@
-from PyQt5.QtCore import pyqtSlot, Qt, QThread, QSize
-from PyQt5.QtGui import QPixmap, QCloseEvent, QKeyEvent, QIcon
+from PyQt5.QtCore import pyqtSlot, Qt, QThread
+from PyQt5.QtGui import QPixmap, QCloseEvent, QKeyEvent
 from PyQt5 import QtGui
 
 import numpy as np
 import cv2
-from PyQt5.QtWidgets import QMainWindow, QLabel, QMenuBar, QMenu, QAction, QSizePolicy
 
 from services.json_file import get_json, set_json
 from window_app.designer import ApplicationDesign
@@ -30,10 +29,16 @@ class App(ApplicationDesign):
         self.filter_video = VideoBackgroundSubtractorKNN(self.__path)
 
         # Привязка функций к кнопкам
-        # self.open_video.clicked.connect(self.__run_open_video)
-        # self.open_filter_video.clicked.connect(self.__run_open_filter_video)
-        # self.open_video_full.clicked.connect(self.__full_screen_video)
-        # self.add_camera.clicked.connect(self._add_camera_json)
+        # Кнопки для просмотра основного потока, фильтра 1 и фильтра 2
+        for key, value in self.list_camera.items():
+            for key_, value_ in value.items():
+                key_.triggered.connect(
+                    lambda ch, value_object=value_, type_func=key: self._actions_open_video(value_object, type_func)
+                )
+        # Полноэкранный режим
+        self.action_full_screen.triggered.connect(
+            lambda ch: self.__full_screen_video()
+        )
 
         # Словарь ключ: нажатая кнопка, значение: ключ в json файле
         self.key = {
@@ -138,7 +143,7 @@ class App(ApplicationDesign):
         frame_to_widget = convert_to_qt_format.scaled(self.image_label.size(), Qt.IgnoreAspectRatio)
         return QPixmap.fromImage(frame_to_widget)
 
-    def _button_open_video(self, path: str) -> None:
+    def _actions_open_video(self, path: str, type_actions: str) -> None:
         """Открыть видео по кнопке"""
 
         # Меняем RTSP путь до видео
@@ -149,8 +154,12 @@ class App(ApplicationDesign):
             # Иначе сохранить, как строка
             self.__path = path
 
-        # Запускаем видео
-        self.__run_open_video()
+        if type_actions == "main_thread":
+            # Запускаем основной поток
+            self.__run_open_video()
+        elif type_actions == "filter_1":
+            # Запускаем поток с фильтром 1
+            self.__run_open_filter_video()
 
     def __full_screen_video(self) -> None:
         """Видео на полный экран"""
@@ -158,33 +167,9 @@ class App(ApplicationDesign):
         if self.isFullScreen():
             # Видео вернуть в прежнее состояние
             self.showNormal()
-            # Показать макет для добавления и открытия видео
-            self.add_camera_title.show()
-            self.name_camera_title.show()
-            self.name_camera.show()
-            self.rtsp_title.show()
-            self.rtsp.show()
-            self.add_camera.show()
-            self.add_camera_line.show()
-            self.open_camera_title.show()
-            for button in self.list_button:
-                button.show()
-            self.vertical_line_main.show()
         else:
             # Видео на полный экран
             self.showFullScreen()
-            # Скрыть макет для добавления и открытия видео
-            self.add_camera_title.hide()
-            self.name_camera_title.hide()
-            self.name_camera.hide()
-            self.rtsp_title.hide()
-            self.rtsp.hide()
-            self.add_camera.hide()
-            self.add_camera_line.hide()
-            self.open_camera_title.hide()
-            for button in self.list_button:
-                button.hide()
-            self.vertical_line_main.hide()
 
     @staticmethod
     def update_array(array: list) -> list:
@@ -240,3 +225,6 @@ class App(ApplicationDesign):
             # Обнулить список координат для нажатия мышки
             self.image_label.coordinates = list()
             self.image_label.coordinates_line = list()
+        elif event.key() == Qt.Key_F11:
+            # Полноэкранный режим
+            self.__full_screen_video()

@@ -98,7 +98,7 @@ class ApplicationDesign(QMainWindow):
         # Установка минимального размера окна
         self.setMinimumSize(QSize(640, 480))
         # Создание главного макета для просмотра видео
-        self.image_label = QLabel(self)
+        self.image_label = Label(self)
         self.image_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.setCentralWidget(self.image_label)
         # Создание меню
@@ -147,7 +147,7 @@ class ApplicationDesign(QMainWindow):
         camera_edit_menu = edit_menu.addMenu(self.name_element.get("camera"))
         camera_edit_menu.addAction(self.camera_add_action)
         camera_delete_menu = camera_edit_menu.addMenu(self.name_element.get("delete"))
-        camera_delete_menu.addAction(*self.list_camera)
+        camera_delete_menu.addAction(*self.list_camera["delete"].keys())
         # Добавление раздела маска
         mask_edit_menu = edit_menu.addMenu(self.name_element.get("mask"))
         mask_edit_menu.addAction(self.mask_add_action)
@@ -174,15 +174,16 @@ class ApplicationDesign(QMainWindow):
         self.menu.addMenu(watch_menu)
         # Добавление раздела основного потока
         main_thread_menu = watch_menu.addMenu(self.name_element.get("main_thread"))
-        main_thread_menu.addAction(*self.list_camera)
+        main_thread_menu.addAction(*self.list_camera["main_thread"].keys())
         # Добавление раздела фильтр 1
         filter_1_menu = watch_menu.addMenu(self.name_element.get("filter_1"))
-        filter_1_menu.addAction(*self.list_camera)
+        filter_1_menu.addAction(*self.list_camera["filter_1"].keys())
         # Добавление раздела фильтр 2
         filter_2_menu = watch_menu.addMenu(self.name_element.get("filter_2"))
-        filter_2_menu.addAction(*self.list_camera)
+        filter_2_menu.addAction(*self.list_camera["filter_2"].keys())
         # Добавление раздела полноэкранного просмотра
-        watch_menu.addAction(self.name_element.get("full_screen"))
+        self.action_full_screen = watch_menu.addAction(self.name_element.get("full_screen"))
+        self.action_full_screen.setShortcut("F11")
 
     def _create_actions_edit(self) -> None:
         """
@@ -190,7 +191,15 @@ class ApplicationDesign(QMainWindow):
         """
         # Инициализация списка камер
         data_json = get_json('data/data.json')
-        self.list_camera = [QAction(name) for name, path in data_json.items()]
+        self.list_name = [
+            "main_thread",
+            "filter_1",
+            "filter_2",
+            "delete",
+        ]
+        self.list_camera = {
+            name_actions: {QAction(name): path for name, path in data_json.items()} for name_actions in self.list_name
+        }
         # Список добавить камеры
         self.camera_add_action = QAction(self.name_element.get("add"), self)
         # Список добавить, удалить, сохранить маску
